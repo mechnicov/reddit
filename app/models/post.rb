@@ -1,4 +1,6 @@
 class Post < ApplicationRecord
+  belongs_to :author
+
   validates :title,
             :body,
             :score_dislikes,
