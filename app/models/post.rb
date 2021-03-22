@@ -3,10 +3,10 @@ class Post < ApplicationRecord
 
   validates :title,
             :body,
-            :score_dislikes,
-            :score_unvoted,
-            :score_likes,
+            :score,
+            :upvoted,
             :url,
+            :short_url,
             :reddit_id,
             :comments_count,
             :posted_at,
