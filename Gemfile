@@ -9,6 +9,9 @@ gem 'puma', '~> 4.1'
 gem 'webpacker', '~> 4.0'
 gem 'jbuilder', '~> 2.7'
 
+gem 'watir'
+gem 'selenium-webdriver'
+
 group :development, :test do
   gem 'pry-rails'
 end
