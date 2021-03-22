@@ -5,5 +5,6 @@ class Author < ApplicationRecord
             :reddit_id,
             :post_karma,
             :comment_karma,
+            :registered_at,
             presence: true
 end
