@@ -1,6 +1,6 @@
 class Post < ApplicationRecord
   belongs_to :author, optional: true
-  belongs_to :subreddit, optional: true
+  belongs_to :subreddit
 
   validates :title,
             :body,
