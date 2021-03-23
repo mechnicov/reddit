@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_03_23_102925) do
+ActiveRecord::Schema.define(version: 2021_03_23_125020) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -38,7 +38,9 @@ ActiveRecord::Schema.define(version: 2021_03_23_102925) do
     t.integer "score", default: 0, null: false
     t.integer "upvoted", limit: 2, default: 0, null: false
     t.string "short_url", null: false
+    t.bigint "subreddit_id"
     t.index ["author_id"], name: "index_posts_on_author_id"
+    t.index ["subreddit_id"], name: "index_posts_on_subreddit_id"
   end
 
   create_table "subreddits", force: :cascade do |t|
@@ -50,4 +52,5 @@ ActiveRecord::Schema.define(version: 2021_03_23_102925) do
   end
 
   add_foreign_key "posts", "authors"
+  add_foreign_key "posts", "subreddits"
 end
