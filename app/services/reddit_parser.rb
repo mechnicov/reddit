@@ -1,48 +1,67 @@
 require 'open-uri'
 
 class RedditParser
-  BASE_REDDIT_URL = 'https://old.reddit.com'.freeze
+  BASE_REDDIT_URL = 'https://www.reddit.com'.freeze
+  BASE_OLD_REDDIT_URL = 'https://old.reddit.com'.freeze
 
   def initialize
     @browser = Watir::Browser.new(:chrome, headless: true)
   end
 
-  def start_parsing(subreddit: nil, url: nil)
-    url = "#{BASE_REDDIT_URL}/r/#{subreddit}/top/?sort=top&t=all" if subreddit.present?
+  def start_parsing(url:)
     browser.goto(url)
 
-    subreddit ||= browser.element(tag_name: 'meta', property: 'og:title').attributes[:content].split(' r/').last
+    subreddit = get_current_subreddit
 
     loop do
       sleep rand(1..4)
 
       browser.links(class: 'title', href: /r\/#{subreddit}\/comments/).each do |link|
-        0.step(10_000, rand(5..20)) do |v|
-          browser.execute_script "window.scrollTo(0, #{v})"
-          sleep 0.00001
-        end
-
-        sleep rand(1..4)
-        browser.execute_script "window.scrollTo(0, -10000)"
+        scroll_down_up
 
         link.click(:control)
 
         browser.window(url: link.href).use
 
         sleep rand(1..4)
+
         parse_post
-        browser.execute_script "window.scrollTo(0, 200)"
-        sleep 2
+
+        scroll_down
 
         browser.window.close
       end
 
       logger.info "#{browser.url} has parsed"
 
-      browser.link(text: 'next ›').click
+      browser.link(text: 'next ›').click rescue return
     rescue => error
       logger.error browser.url
       logger.error error
+    end
+  end
+
+  def get_subreddit_info(subreddit)
+    browser.goto("#{BASE_OLD_REDDIT_URL}/r/#{subreddit}")
+    scroll_down_up
+
+    subreddit = Subreddit.find_or_create_by(name: subreddit)
+
+    doc = Nokogiri::HTML(browser.html)
+
+    subscribers_count = doc.at('.subscribers span').text.delete('^0-9').to_i
+    founded_at = Time.parse(doc.at('.age time')[:datetime])
+
+    subreddit.update!(subscribers_count: subscribers_count, founded_at: founded_at)
+  end
+
+  def assign_subreddits_to_posts
+    Post.where(subreddit: nil).find_each do |post|
+      browser.goto(post.short_url)
+
+      scroll_down_up
+
+      post.update!(subreddit: Subreddit.find_by(name: get_current_subreddit))
     end
   end
 
@@ -58,10 +77,10 @@ class RedditParser
 
     doc = Nokogiri::HTML(browser.html)
 
-    body = doc.at('.expando div.md').text
+    body = doc.at('.expando div.md')&.text
     data_node = doc.at('#siteTable .thing')
 
-    return if body.size < 2000
+    return if body&.size.to_i < 2000
     return if data_node['data-promoted'] == 'true'
 
     author = nil
@@ -107,6 +126,8 @@ class RedditParser
 
     post = Post.find_or_create_by(reddit_id: post_reddit_id)
 
+    subreddit = Subreddit.find_by(name: get_current_subreddit)
+
     post.update!(
       title: title,
       body: body,
@@ -116,11 +137,32 @@ class RedditParser
       score: score,
       upvoted: upvoted,
       short_url: short_url,
-      author: author
+      author: author,
+      subreddit: subreddit
     )
   end
 
   def logger
     @logger ||= Logger.new(Rails.root.join('log', 'reddit.log'))
+  end
+
+  def scroll_down_up
+    0.step(10_000, rand(5..20)) do |v|
+      browser.execute_script "window.scrollTo(0, #{v})"
+      sleep 0.00001
+    end
+
+    sleep rand(1..4)
+
+    browser.execute_script "window.scrollTo(0, -10000)"
+  end
+
+  def scroll_down
+    browser.execute_script "window.scrollTo(0, 200)"
+    sleep 2
+  end
+
+  def get_current_subreddit
+    browser.title.split(' : ').last
   end
 end
