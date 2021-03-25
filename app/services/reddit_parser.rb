@@ -17,17 +17,22 @@ class RedditParser
       sleep rand(1..4)
 
       browser.links(class: 'title', href: /r\/#{subreddit}\/comments/).each do |link|
-        scroll_down_up
+        0.step(10_000, rand(5..20)) do |v|
+          browser.execute_script "window.scrollTo(0, #{v})"
+          sleep 0.00001
+        end
+
+        sleep rand(1..4)
+        browser.execute_script "window.scrollTo(0, -10000)"
 
         link.click(:control)
 
         browser.window(url: link.href).use
 
         sleep rand(1..4)
-
         parse_post
-
-        scroll_down
+        browser.execute_script "window.scrollTo(0, 200)"
+        sleep 2
 
         browser.window.close
       end
@@ -77,7 +82,7 @@ class RedditParser
 
     doc = Nokogiri::HTML(browser.html)
 
-    body = doc.at('.expando div.md')&.text
+    body = doc.at('div.content .expando div.md')&.text
     data_node = doc.at('#siteTable .thing')
 
     return if body&.size.to_i < 2000
@@ -102,7 +107,7 @@ class RedditParser
 
       if registered_at.present?
         author = Author.find_or_create_by(reddit_id: author_reddit_id)
-        author.update!(
+        author.update(
           comment_karma: comment_karma,
           post_karma: post_karma,
           name: name,
@@ -112,7 +117,7 @@ class RedditParser
     end
 
     # Post attributes
-    title = doc.at('.entry a.title').text
+    title = doc.at('div.content .entry a.title').text
 
     score = data_node['data-score'].to_i
     url = data_node['data-url']
@@ -128,7 +133,7 @@ class RedditParser
 
     subreddit = Subreddit.find_by(name: get_current_subreddit)
 
-    post.update!(
+    post.update(
       title: title,
       body: body,
       url: url,
@@ -163,6 +168,6 @@ class RedditParser
   end
 
   def get_current_subreddit
-    browser.title.split(' : ').last
+    browser.form(id: 'search').attributes[:action].split('reddit.com/r/').last.chomp('/search')
   end
 end
