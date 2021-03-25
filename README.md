@@ -1,24 +1,59 @@
-# README
+## Reddit parser
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+### Requirements
 
-Things you may want to cover:
+- Ruby 2.6.6
 
-* Ruby version
+- PostgreSQL
 
-* System dependencies
+- [chromedriver](https://chromedriver.chromium.org/)
 
-* Configuration
+### Setup
 
-* Database creation
+1. Download or clone repo.
 
-* Database initialization
+2. Install all dependencies and prepare database:
 
-* How to run the test suite
+```console
+$ bin/setup
+```
 
-* Services (job queues, cache servers, search engines, etc.)
+### Tasks
 
-* Deployment instructions
+You can run parsing tasks. For example:
 
-* ...
+To get or update subreddit info
+
+```console
+$ rake parse:subreddit_info subreddit=relationship_advice
+```
+
+To parse or update posts in given subreddit
+
+```console
+$ rake parse:posts subreddit=relationship_advice
+```
+
+To get new posts in given subreddit
+
+```console
+$ rake parse:new_posts subreddit=relationship_advice
+```
+
+To parse posts starting from given list url
+
+```console
+$ rake parse:url url='https://old.reddit.com/r/relationships/new/?count=675&after=t3_ma444q'
+```
+
+### License
+
+MIT – see `LICENSE`
+
+### Contacts
+
+Email me at:
+
+```rb
+'dcdl-snotynu?fl`hk-bnl'.each_char.map(&:succ).join
+```
