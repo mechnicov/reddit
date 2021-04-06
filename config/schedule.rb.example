@@ -1,0 +1,14 @@
+require 'pg'
+require 'dotenv/load'
+
+conn = PG::Connection.open(dbname: ENV['DATABASE'])
+res = conn.exec('SELECT * FROM subreddits;')
+
+set :output, File.join(Whenever.path, 'log', 'cron.log')
+set :environment, ENV['RAILS_ENV']
+
+res.each do |row|
+  every 1.day, at: '0:30' do
+    rake "parse:new_posts subreddit=#{row['name']}"
+  end
+end
