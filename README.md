@@ -18,6 +18,8 @@
 $ bin/setup
 ```
 
+3. Fill in your data your data in `.env`.
+
 ### Tasks
 
 You can run parsing tasks. For example:
@@ -45,6 +47,14 @@ To parse posts starting from given list url
 ```console
 $ rake parse:url url='https://old.reddit.com/r/relationships/new/?count=675&after=t3_ma444q'
 ```
+
+### Cron jobs
+
+You can also use cron jobs for this rake tasks.
+
+To customize them, use `config/schedule.rb`.
+
+For more information [see docs](https://github.com/javan/whenever).
 
 ### License
 
