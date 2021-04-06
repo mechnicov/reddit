@@ -12,6 +12,10 @@ gem 'jbuilder', '~> 2.7'
 gem 'watir'
 gem 'selenium-webdriver'
 
+gem 'whenever', require: false
+
+gem 'dotenv-rails'
+
 group :development, :test do
   gem 'pry-rails'
 end
