@@ -3,6 +3,7 @@ require 'open-uri'
 class RedditParser
   BASE_REDDIT_URL = 'https://www.reddit.com'.freeze
   BASE_OLD_REDDIT_URL = 'https://old.reddit.com'.freeze
+  MINIMAL_SYMBOLS_QTY = 2_000.freeze
 
   def initialize
     @browser = Watir::Browser.new(:chrome, headless: true)
@@ -14,7 +15,7 @@ class RedditParser
     subreddit = get_current_subreddit
 
     loop do
-      sleep rand(1..4)
+      sleep rand(1..2.5)
 
       browser.links(class: 'title', href: /r\/#{subreddit}\/comments/).each do |link|
         0.step(10_000, rand(5..20)) do |v|
@@ -22,14 +23,14 @@ class RedditParser
           sleep 0.00001
         end
 
-        sleep rand(1..4)
+        sleep rand(1..2.5)
         browser.execute_script "window.scrollTo(0, -10000)"
 
         link.click(:control)
 
         browser.window(url: link.href).use
 
-        sleep rand(1..4)
+        sleep rand(1..2.5)
         parse_post
         browser.execute_script "window.scrollTo(0, 200)"
         sleep 2
@@ -85,7 +86,7 @@ class RedditParser
     body = doc.at('div.content .expando div.md')&.text
     data_node = doc.at('#siteTable .thing')
 
-    return if body&.size.to_i < 2000
+    return if body&.size.to_i < MINIMAL_SYMBOLS_QTY
     return if data_node['data-promoted'] == 'true'
 
     author = nil
