@@ -34,3 +34,4 @@ yarn-debug.log*
 
 .env
 config/schedule.rb
+/export
