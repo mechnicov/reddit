@@ -48,6 +48,12 @@ To parse posts starting from given list url
 $ rake parse:url url='https://old.reddit.com/r/relationships/new/?count=675&after=t3_ma444q'
 ```
 
+To export all records to CSV
+
+```console
+$ rake export:csv
+```
+
 ### Cron jobs
 
 You can also use cron jobs for this rake tasks.
