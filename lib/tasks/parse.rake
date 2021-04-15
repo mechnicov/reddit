@@ -1,6 +1,8 @@
 namespace :parse do
   subreddit = ENV['subreddit']
   url = ENV['url']
+  start_date = ENV['start']
+  end_date = ENV['end']
 
   desc 'Get subreddit info'
   task subreddit_info: :environment do
@@ -37,5 +39,18 @@ namespace :parse do
     next unless url.present?
 
     RedditParser.new.start_parsing(url: url)
+  end
+
+  desc 'Parse old posts from start=yyyy-mm-dd to end=yyyy-mm-dd'
+  task by_date: :environment do
+    next unless subreddit.present? && start_date.present?
+
+    end_date ||= Date.today.to_s
+
+    RedditParser.new.get_posts_by_date(
+      subreddit: subreddit,
+      start_date: Date.parse(start_date),
+      end_date: Date.parse(end_date)
+    )
   end
 end
