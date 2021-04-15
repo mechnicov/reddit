@@ -15,6 +15,8 @@ class RedditParser
     subreddit = get_current_subreddit
 
     loop do
+      start = Time.now.to_i
+
       sleep rand(1..2.5)
 
       browser.links(class: 'title', href: /r\/#{subreddit}\/comments/).each do |link|
@@ -38,7 +40,10 @@ class RedditParser
         browser.window.close
       end
 
-      logger.info "#{browser.url} has parsed"
+      duration =
+        ActiveSupport::Duration.build(Time.now.to_i - start).parts.invert.map { |k, v| "#{k} #{v}" }.join(' ')
+
+      logger.info "#{browser.url} has parsed. Duration: #{duration}"
 
       browser.link(text: 'next ›').click rescue return
     rescue => error
@@ -68,6 +73,59 @@ class RedditParser
       scroll_down_up
 
       post.update!(subreddit: Subreddit.find_by(name: get_current_subreddit))
+    end
+  end
+
+  def get_posts_by_date(subreddit:, start_date:, end_date: Date.today)
+    browser.window.maximize
+
+    (start_date..end_date).each do |day|
+      search_url = "https://redditsearch.io/?term=&dataviz=false&aggs=false" \
+        "&subreddits=#{subreddit}&searchtype=posts&search=true" \
+        "&start=#{(day.beginning_of_day - 3.hours).to_i}&end=#{(day.end_of_day.to_i - 3.hours).to_i}&size=10000"
+
+      browser.goto(search_url)
+
+      start = Time.now.to_i
+
+      sleep 2
+
+      doc = Nokogiri::HTML(browser.html)
+
+      if doc.at('.div-container.data-display.active').blank?
+        logger.info "Day #{day}. No search result. REDO"
+        redo
+      end
+
+      urls =
+        doc.
+          css('.submission').
+          map { |node| "https://old.reddit.com/r/#{subreddit}/comments/#{node.attributes['data-id']}" }
+
+      urls.each do |url|
+        browser.execute_script("window.open('#{url}')")
+        sleep 3
+        parse_post
+        browser.execute_script 'window.scrollTo(0, 200)'
+        browser.window.close
+      end
+
+      duration = Time.now.to_i - start
+
+      if duration < 25
+        logger.info "Day #{day} too short. Check: #{search_url}"
+        logger.info "Try to repeat: rake parse:by_date subreddit=#{subreddit} start=#{day} end=#{day}"
+        browser.screenshot.save Rails.root.join('tmp', "#{subreddit}_#{day}.png")
+        next
+      end
+
+      duration =
+        ActiveSupport::Duration.build(duration).parts.invert.map { |k, v| "#{k} #{v}" }.join(' ')
+
+      logger.info "Day #{day} has parsed for #{subreddit}. Duration: #{duration}"
+    rescue => error
+      logger.error browser.url
+      logger.error error
     end
   end
 
