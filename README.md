@@ -48,6 +48,12 @@ To parse posts starting from given list url
 $ rake parse:url url='https://old.reddit.com/r/relationships/new/?count=675&after=t3_ma444q'
 ```
 
+To parse posts by date (`end` by default is current date, can be omitted)
+
+```console
+$ rake parse:by_date subreddit=relationship_advice start=2014-01-31 end=2014-03-31
+```
+
 To export all records to CSV
 
 ```console
