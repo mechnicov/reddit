@@ -1,19 +1,33 @@
 namespace :export do
   desc 'Export all records to CSV'
   task csv: :environment do
-    Dir[Rails.root.join('app', 'models', '*.rb')].each do |file|
-      require file
-    end
+    pattern = ENV['pattern']
 
-    ActiveRecord::Base.
-      descendants.
-      reject { |klass| klass == ApplicationRecord }.
-      each do |model|
-        filename = Rails.root.join('export', "#{model.name.tableize}.csv")
+    exported =
+      if pattern.present?
+        [
+          subreddits = Subreddit.where('name ~* ?', pattern),
+          posts = Post.where(subreddit: subreddits),
+          Author.where(posts: posts)
+        ]
+      else
+        Dir[Rails.root.join('app', 'models', '*.rb')].each do |file|
+          require file
+        end
 
-        File.write(filename, Export.to_csv(model))
-
-        puts "#{model} records were exported to #{filename}"
+        ActiveRecord::Base.
+          descendants.
+          reject { |klass| klass == ApplicationRecord }
       end
+
+    exported.each do |export|
+      klass = export.try(:klass) || export
+
+      filename = Rails.root.join('export', "#{klass.name.tableize}.csv")
+
+      File.write(filename, Export.to_csv(export))
+
+      puts "#{klass} records were exported to #{filename}"
+    end
   end
 end

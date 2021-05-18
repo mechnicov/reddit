@@ -93,7 +93,7 @@ class RedditParser
       doc = Nokogiri::HTML(browser.html)
 
       if doc.at('.div-container.data-display.active').blank?
-        logger.info "Day #{day}. No search result. REDO"
+        logger.info "Day #{day}. No search result for #{subreddit}. REDO"
         redo
       end
 
