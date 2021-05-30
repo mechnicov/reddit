@@ -1,4 +1,4 @@
-## Reddit parser
+## Reddit analyzer
 
 ### Requirements
 
@@ -7,6 +7,8 @@
 - PostgreSQL
 
 - [chromedriver](https://chromedriver.chromium.org/)
+
+- python 3.8.5
 
 ### Setup
 
@@ -67,6 +69,22 @@ You can also use cron jobs for this rake tasks.
 To customize them, use `config/schedule.rb`.
 
 For more information [see docs](https://github.com/javan/whenever).
+
+### Posts analysis
+
+To analyze data run
+
+```console
+$ jupyter-notebook analyze.ipynb
+```
+
+You need to export data to CSV before.
+
+Lemmatized data will be saved at `export/posts_normalized.csv`.
+
+Page with topic modelling will be saved at `export/topic_modeling.html`.
+
+Word clouds will be saved at `export/cloud*.png`.
 
 ### License
 
